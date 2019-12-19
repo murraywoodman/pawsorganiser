@@ -1,0 +1,42 @@
+version: "3"
+
+services:
+  app:
+    image: previousnext/php-apache:7.3-3.x-dev
+    network_mode: host
+    volumes:
+      - .:/data:cached
+      # This allows for developers to access the remote environment.
+      - $HOME/.ssh:/root/.ssh
+      # Mount composer cache.
+      - $HOME/.composer:/root/.composer
+    environment:
+      - XDEBUG_CONFIG=remote_host=docker.for.mac.host.internal remote_connect_back=0
+      - PHP_IDE_CONFIG=serverName=localhost
+      - XDEBUG_ENABLED=0
+
+  db:
+    image: mariadb
+    network_mode: host
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=local
+      - MYSQL_USER=drupal
+      - MYSQL_PASSWORD=drupal
+  chrome:
+    image: drupalci/webdriver-chromedriver:production
+    network_mode: host
+    ulimits:
+      core:
+        soft: -1
+        hard: -1
+    cap_add:
+      - SYS_ADMIN
+    volumes:
+      - /dev/shm:/dev/shm
+    entrypoint:
+      - chromedriver
+      - "--no-sandbox"
+      - "--log-path=/tmp/chromedriver.log"
+      - "--verbose"
+      - "--whitelisted-ips="
